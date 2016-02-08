@@ -7,9 +7,12 @@ local resourceManager = game:getResourceManager()
 local inputManager = game:getInputManager()
 local entityManager = game:getEntityManager()
 
+local playerHeight = 1.65 -- In meters
+
 local musicButtonPressedLastFrame = false
 local actionButtonPressedLastFrame = false -- e
 
+local basicShader = nil
 local shadedShader = nil
 local texturedShader = nil
 
@@ -26,8 +29,9 @@ function gameInit()
 	camera:setFarClippingDistance(10000)
 	camera:setFieldOfView(90)
 	
-	cameraPhysicsBody:setPosition(Vec3(0, 1.65, 0)) -- Starting position
-	cameraPhysicsBody:calculateShapesFromRadius(1)
+	cameraPhysicsBody:setPosition(Vec3(0, playerHeight, 0)) -- Starting position
+	cameraPhysicsBody:calculateShapesFromRadius(0.5)
+	cameraPhysicsBody:setWorldFriction(3)
 	
 	loadResources()
 	
@@ -58,15 +62,28 @@ function loadResources()
 	
 	resourceManager:addTexture("Pyongyang/Apartment/Apartment.dds", TextureType.DDS)
 	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Apartment.obj")
+	resourceManager:addTexture("Pyongyang/Apartment/Room/Room.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Room.obj")
+	-- Here, I've made collision objects separate, for fun (render as basic object)
+	local roomCollisions = resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/RoomCollisions.obj")
+	
+	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/KimIlSungPicture.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/KimIlSungPicture.obj")
+	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/KimJongIlPicture.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/KimJongIlPicture.obj")
+	
+	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/TableFull.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/Table.obj")
 	
 	resourceManager:addTexture("Pyongyang/Skybox.dds", TextureType.DDS)
 	resourceManager:addObjectGeometryGroup("Pyongyang/Skybox.obj")
 	
+	basicShader = resourceManager:findShader("basic")
 	shadedShader = resourceManager:findShader("shaded")
 	texturedShader = resourceManager:findShader("textured")
 	
 	for i,v in ipairs(pyongyangGround:getObjectGeometries()) do
-		object = ShadedObject(v, shadedShader, resourceManager:findTexture("Pyongyang_Ground" .. i), false, PhysicsBodyType.Ignored)
+		local object = ShadedObject(v, shadedShader, resourceManager:findTexture("Pyongyang_Ground" .. i), false, PhysicsBodyType.Ignored)
 		entityManager:addObject(object)
 	end
 	
@@ -75,7 +92,18 @@ function loadResources()
 	addObjectGeometries("Statue", true, "Statue", PhysicsBodyType.Static)
 	addObjectGeometries("StatueWall1", true, "StatueWall1", PhysicsBodyType.Static)
 	addObjectGeometries("StatueWall2", true, "StatueWall2", PhysicsBodyType.Static)
-	addObjectGeometries("Apartment", false, "Apartment", PhysicsBodyType.Static)
+	addObjectGeometries("Apartment", true, "Apartment", PhysicsBodyType.Static)
+	
+	addObjectGeometries("Room", true, "Room", PhysicsBodyType.Ignored)
+	
+	for i,v in ipairs(roomCollisions:getObjectGeometries()) do
+		local object = Object(v, basicShader, false, PhysicsBodyType.Static)
+		entityManager:addObject(object)
+	end
+	
+	addObjectGeometries("KimIlSungPicture", true, "KimIlSungPicture", PhysicsBodyType.Ignored)
+	addObjectGeometries("KimJongIlPicture", true, "KimJongIlPicture", PhysicsBodyType.Ignored)
+	addObjectGeometries("Table", true, "TableFull", PhysicsBodyType.Static)
 end
 
 function addObjectGeometries(objectGeometryGroupName, isShaded, textureName, physicsBodyType)
@@ -110,7 +138,7 @@ function gameStep()
 		local physicsBody = v:getPhysicsBody()
 		
 		if(physicsBody:getType() ~= PhysicsBodyType.Ignored) then
-			physicsBody:renderDebugShape(shader, camera)
+			--physicsBody:renderDebugShape(shader, camera)
 		end
 	end
 end
@@ -254,29 +282,41 @@ function doControls()
 	end
 end
 
-function distanceBetween2DPoints(p1, p2)
-	return math.sqrt(p1, p2)
+-- 3D
+function distanceBetweenPoints(p1, p2)
+	return math.pow(distanceSquaredBetweenPoints(p1, p2), 1/3)
 end
 
-function distanceSquaredBetween2DPoints(p1, p2)
+function distanceSquaredBetweenPoints(p1, p2)
 	local deltaX = p2.x - p1.x
 	local deltaY = p2.y - p1.y
+	local deltaZ = p2.z - p1.z
 	
-	return (deltaX * deltaX) + (deltaY * deltaY)
+	return (deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ)
 end
 
 -- When you press the action button, this is called
 function doAction()
 	local camera = entityManager:getGameCamera()
-	local pos = Vec2.fromVec3(camera:getPhysicsBody():getPosition())
+	local cameraPhysicsBody = camera:getPhysicsBody()
+	local pos = camera:getPhysicsBody():getPosition()
 	
-	local maxDistanceSquared = 1 * 1 -- In meters, as always
+	local maxDistanceSquared = 1.2 * 1.2 -- In meters, as always
 	
-	if(distanceSquaredBetween2DPoints(pos, Vec2(-60.76, 1.2)) <= maxDistanceSquared) then
-		entityManager:removeObjectByIndex(0)
+	-- From apartment to room
+	if(distanceSquaredBetweenPoints(pos, Vec3(-60.76, playerHeight, -15.7)) <= maxDistanceSquared) then
+		cameraPhysicsBody:setPosition(Vec3(-592.2, -274.9 + playerHeight, -11.6))
+		camera:setDirection(Vec4(0, 0, 1, 0)) -- 0 for vector, not point
+	end
+	
+	-- From room to apartment
+	if(distanceSquaredBetweenPoints(pos, Vec3(-592.2, -274.9 + playerHeight, -11.6)) <= maxDistanceSquared) then
+		cameraPhysicsBody:setPosition(Vec3(-60.76, playerHeight, -15.7))
+		camera:setDirection(Vec4(0, 0, -1, 0))
 	end
 	
 	--[[Utils.logprint("")
 	Utils.logprint("Our pos x: " .. pos.x)
-	Utils.logprint("Our pos y: " .. pos.y)]]--
+	Utils.logprint("Our pos y: " .. pos.y)
+	Utils.logprint("Our pos z: " .. pos.z)]]--
 end
