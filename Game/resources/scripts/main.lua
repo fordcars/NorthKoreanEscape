@@ -16,6 +16,10 @@ local basicShader = nil
 local shadedShader = nil
 local texturedShader = nil
 
+local roomTableObject = nil
+
+local skybox = nil
+
 function gameInit()
 	Utils.logprint("Hello, init from lua!")
 	
@@ -29,54 +33,80 @@ function gameInit()
 	camera:setFarClippingDistance(10000)
 	camera:setFieldOfView(90)
 	
-	cameraPhysicsBody:setPosition(Vec3(0, playerHeight, 0)) -- Starting position
+	cameraPhysicsBody:setPosition(Vec3(-594.56, -274.9 + playerHeight, -10.26)) -- Starting position
 	cameraPhysicsBody:calculateShapesFromRadius(0.5)
 	cameraPhysicsBody:setWorldFriction(3)
 	
-	loadResources()
+	resourceManager:addShader("basic.v.glsl", "basic.f.glsl")
+	resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
+	resourceManager:addShader("shaded.v.glsl", "shaded.f.glsl")
+	
+	loadPyongyang()
 	
 	inputManager:registerKeys({KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT,
 		KeyCode.w, KeyCode.a, KeyCode.s, KeyCode.d, KeyCode.SPACE, KeyCode.LSHIFT, KeyCode.LCTRL, KeyCode.m, KeyCode.e})
 end
 
-function loadResources()
-	resourceManager:addShader("basic.v.glsl", "basic.f.glsl")
-	resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
-	resourceManager:addShader("shaded.v.glsl", "shaded.f.glsl")
+-- Loads and adds to the world
+function loadPyongyang()
+	local prefix = "Pyongyang/"
 	
-	resourceManager:addTexture("Pyongyang/Pyongyang_Ground1.dds", TextureType.DDS)
-	resourceManager:addTexture("Pyongyang/Pyongyang_Ground2.dds", TextureType.DDS)
-	resourceManager:addTexture("Pyongyang/Pyongyang_Ground3.dds", TextureType.DDS)
-	resourceManager:addTexture("Pyongyang/Pyongyang_Ground4.dds", TextureType.DDS)
-	local pyongyangGround = resourceManager:addObjectGeometryGroup("Pyongyang/Pyongyang_Ground.obj")
+	resourceManager:addSound(prefix .. "Pyongyang_Music.ogg", SoundType.Music)
+	resourceManager:findSound("Pyongyang_Music"):play()
 	
-	resourceManager:addTexture("Pyongyang/Bus/Bus.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Bus/Bus.obj")
+	resourceManager:addTexture(prefix .. "Pyongyang_Ground1.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Ground2.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Ground3.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Ground4.dds", TextureType.DDS)
+	local pyongyangGround = resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Ground.obj")
 	
-	resourceManager:addTexture("Pyongyang/Statue/Statue.dds", TextureType.DDS)
-	resourceManager:addTexture("Pyongyang/Statue/StatueWall1.dds", TextureType.DDS)
-	resourceManager:addTexture("Pyongyang/Statue/StatueWall2.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Statue/Statue.obj")
-	resourceManager:addObjectGeometryGroup("Pyongyang/Statue/StatueWall1.obj")
-	resourceManager:addObjectGeometryGroup("Pyongyang/Statue/StatueWall2.obj")
+	resourceManager:addTexture(prefix .. "Bus/Bus.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Bus/Bus.obj")
 	
-	resourceManager:addTexture("Pyongyang/Apartment/Apartment.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Apartment.obj")
-	resourceManager:addTexture("Pyongyang/Apartment/Room/Room.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Room.obj")
+	resourceManager:addTexture(prefix .. "Statue/Statue.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Statue/StatueWall1.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Statue/StatueWall2.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Statue/Statue.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Statue/StatueWall1.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Statue/StatueWall2.obj")
+	
+	resourceManager:addTexture(prefix .. "Apartment/Apartment.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Apartment.obj")
+	resourceManager:addTexture(prefix .. "Apartment/Room/Room.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Room/Room.obj")
+	
 	-- Here, I've made collision objects separate, for fun (render as basic object)
-	local roomCollisions = resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/RoomCollisions.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Room/RoomCollisions.obj")
 	
-	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/KimIlSungPicture.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/KimIlSungPicture.obj")
-	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/KimJongIlPicture.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/KimJongIlPicture.obj")
+	resourceManager:addTexture(prefix .. "Apartment/Room/Objects/KimIlSungPicture.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Room/Objects/KimIlSungPicture.obj")
+	resourceManager:addTexture(prefix .. "Apartment/Room/Objects/KimJongIlPicture.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Room/Objects/KimJongIlPicture.obj")
 	
-	resourceManager:addTexture("Pyongyang/Apartment/Room/Objects/TableFull.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Apartment/Room/Objects/Table.obj")
+	resourceManager:addTexture(prefix .. "Apartment/Room/Objects/TableFull.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Apartment/Room/Objects/TableEmpty.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Apartment/Room/Objects/Table.obj")
 	
-	resourceManager:addTexture("Pyongyang/Skybox.dds", TextureType.DDS)
-	resourceManager:addObjectGeometryGroup("Pyongyang/Skybox.obj")
+	resourceManager:addTexture(prefix .. "Skybox.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Skybox.obj")
+	
+	resourceManager:addTexture(prefix .. "Pyongyang_Building1.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Building2.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Building3.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Building4.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Building5.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Pyongyang_Building6.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings1.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings2.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings3.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings4.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings5.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings6.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Buildings7.obj") -- Uses same texture as apartment
+	
+	resourceManager:addTexture(prefix .. "Pyongyang_Walls.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Walls.obj")
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Collisions.obj")
 	
 	basicShader = resourceManager:findShader("basic")
 	shadedShader = resourceManager:findShader("shaded")
@@ -87,7 +117,6 @@ function loadResources()
 		entityManager:addObject(object)
 	end
 	
-	addObjectGeometries("Skybox", false, "Skybox", PhysicsBodyType.Ignored)
 	addObjectGeometries("Bus", true, "Bus", PhysicsBodyType.Static)
 	addObjectGeometries("Statue", true, "Statue", PhysicsBodyType.Static)
 	addObjectGeometries("StatueWall1", true, "StatueWall1", PhysicsBodyType.Static)
@@ -95,31 +124,107 @@ function loadResources()
 	addObjectGeometries("Apartment", true, "Apartment", PhysicsBodyType.Static)
 	
 	addObjectGeometries("Room", true, "Room", PhysicsBodyType.Ignored)
-	
-	for i,v in ipairs(roomCollisions:getObjectGeometries()) do
-		local object = Object(v, basicShader, false, PhysicsBodyType.Static)
-		entityManager:addObject(object)
-	end
+	addObjectGeometries("RoomCollisions", false, false, PhysicsBodyType.Static)
 	
 	addObjectGeometries("KimIlSungPicture", true, "KimIlSungPicture", PhysicsBodyType.Ignored)
 	addObjectGeometries("KimJongIlPicture", true, "KimJongIlPicture", PhysicsBodyType.Ignored)
-	addObjectGeometries("Table", true, "TableFull", PhysicsBodyType.Static)
+	roomTableObject = addObjectGeometries("Table", true, "TableFull", PhysicsBodyType.Static)[1]
+	
+	skybox = addObjectGeometries("Skybox", false, "Skybox", PhysicsBodyType.Ignored)[1]
+	
+	addObjectGeometries("Pyongyang_Buildings1", true, "Pyongyang_Building1", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings2", true, "Pyongyang_Building2", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings3", true, "Pyongyang_Building3", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings4", true, "Pyongyang_Building4", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings5", true, "Pyongyang_Building5", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings6", true, "Pyongyang_Building6", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Buildings7", true, "Apartment", PhysicsBodyType.Static)
+	
+	addObjectGeometries("Pyongyang_Walls", true, "Pyongyang_Walls", PhysicsBodyType.Static)
+	addObjectGeometries("Pyongyang_Collisions", false, false, PhysicsBodyType.Static)
 end
 
-function addObjectGeometries(objectGeometryGroupName, isShaded, textureName, physicsBodyType)
+function loadForest()
+	local prefix = "Forest/"
+	local plantsPrefix = prefix .. "Plants/"
+	
+	resourceManager:addSound(prefix .. "Forest_Music.ogg", SoundType.Music)
+	resourceManager:findSound("Forest_Music"):fadeIn(10000, -1)
+	
+	resourceManager:addObjectGeometryGroup(prefix .. "Forest_Ground.obj")
+	resourceManager:addTexture(prefix .. "Forest_Ground.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Ground", true, "Forest_Ground", PhysicsBodyType.Ignored)
+	
+	resourceManager:addObjectGeometryGroup(prefix .. "Skybox.obj")
+	resourceManager:addTexture(prefix .. "Skybox.dds", TextureType.DDS)
+	skybox = addObjectGeometries("Skybox", false, "Skybox", PhysicsBodyType.Ignored)[1]
+	
+	-- Plants
+	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Leaves1.obj")
+	resourceManager:addTexture(plantsPrefix .. "Forest_Leaves1.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Leaves1", true, "Forest_Leaves1", PhysicsBodyType.Ignored)
+	
+	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Leaves2.obj")
+	resourceManager:addTexture(plantsPrefix .. "Forest_Leaves2.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Leaves2", true, "Forest_Leaves2", PhysicsBodyType.Ignored)
+	
+	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Leaves3.obj")
+	resourceManager:addTexture(plantsPrefix .. "Forest_Leaves3.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Leaves3", true, "Forest_Leaves3", PhysicsBodyType.Ignored)
+	
+	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Leaves4.obj")
+	resourceManager:addTexture(plantsPrefix .. "Forest_Leaves4.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Leaves4", true, "Forest_Leaves4", PhysicsBodyType.Ignored)
+	
+	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Trunks.obj")
+	resourceManager:addTexture(plantsPrefix .. "Forest_Trunk.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Trunks", true, "Forest_Trunk", PhysicsBodyType.Static, true)
+end
+
+-- Frees ram and vram
+function resetWorld()
+	skybox = nil
+	roomTableObject = nil
+	
+	for i,v in ipairs(entityManager:getObjects()) do
+		entityManager:removeObject(v)
+	end
+
+	resourceManager:clearSounds()
+	resourceManager:clearObjectGeometryGroups()
+	resourceManager:clearTextures()
+end
+
+-- Returns the added objects (references)
+-- If textureName is false, it will create a basic object
+-- isCircular is optional
+function addObjectGeometries(objectGeometryGroupName, isShaded, textureName, physicsBodyType, isCircular)
 	local objectGeometryGroup = resourceManager:findObjectGeometryGroup(objectGeometryGroupName)
+	local newObjects = {}
 	
 	for i,v in ipairs(objectGeometryGroup:getObjectGeometries()) do
 		local object = nil
+		local objectIsCircular = false
 		
-		if(isShaded) then
-			object = ShadedObject(v, shadedShader, resourceManager:findTexture(textureName), false, physicsBodyType)
+		if(isCircular == true) then
+			objectIsCircular = true
+		end
+		
+		if(textureName ~= false) then
+			if(isShaded) then
+				object = ShadedObject(v, shadedShader, resourceManager:findTexture(textureName), objectIsCircular, physicsBodyType)
+			else
+				object = TexturedObject(v, texturedShader, resourceManager:findTexture(textureName), objectIsCircular, physicsBodyType)
+			end
 		else
-			object = TexturedObject(v, texturedShader, resourceManager:findTexture(textureName), false, physicsBodyType)
+			object = Object(v, basicShader, objectIsCircular, physicsBodyType)
 		end
 		
 		entityManager:addObject(object)
+		table.insert(newObjects, object)
 	end
+	
+	return newObjects
 end
 
 function gameStep()
@@ -133,12 +238,13 @@ function gameStep()
 	doControls();
 	
 	camera:getPhysicsBody():renderDebugShapeWithCoord(resourceManager:findShader("basic"), camera, 0.0)
+	skybox:getPhysicsBody():setPosition(camera:getPhysicsBody():getPosition())
 	
 	for i,v in ipairs(objects) do
 		local physicsBody = v:getPhysicsBody()
 		
 		if(physicsBody:getType() ~= PhysicsBodyType.Ignored) then
-			--physicsBody:renderDebugShape(shader, camera)
+			physicsBody:renderDebugShape(shader, camera)
 		end
 	end
 end
@@ -313,6 +419,18 @@ function doAction()
 	if(distanceSquaredBetweenPoints(pos, Vec3(-592.2, -274.9 + playerHeight, -11.6)) <= maxDistanceSquared) then
 		cameraPhysicsBody:setPosition(Vec3(-60.76, playerHeight, -15.7))
 		camera:setDirection(Vec4(0, 0, -1, 0))
+	end
+	
+	-- Take room book
+	if(distanceSquaredBetweenPoints(pos, Vec3(-591.49, -274.9 + playerHeight, -8.45)) <= maxDistanceSquared) then
+		roomTableObject:setTexture(resourceManager:findTexture("TableEmpty"))
+	end
+	
+	-- Bus door
+	if(distanceSquaredBetweenPoints(pos, Vec3(-17.109, playerHeight, -45.71)) <= maxDistanceSquared) then
+		-- Load forest
+		resetWorld()
+		loadForest()
 	end
 	
 	--[[Utils.logprint("")
