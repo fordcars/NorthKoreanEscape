@@ -13,12 +13,16 @@ local musicButtonPressedLastFrame = false
 local actionButtonPressedLastFrame = false -- e
 
 local basicShader = nil
-local shadedShader = nil
 local texturedShader = nil
+local shadedShader = nil
 
 local roomTableObject = nil
 
 local skybox = nil
+
+local timeAtTimerStart = 0
+local timerLength = 0 -- In seconds
+local transitioning = false
 
 function gameInit()
 	Utils.logprint("Hello, init from lua!")
@@ -37,9 +41,9 @@ function gameInit()
 	cameraPhysicsBody:calculateShapesFromRadius(0.5)
 	cameraPhysicsBody:setWorldFriction(3)
 	
-	resourceManager:addShader("basic.v.glsl", "basic.f.glsl")
-	resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
-	resourceManager:addShader("shaded.v.glsl", "shaded.f.glsl")
+	basicShader = resourceManager:addShader("basic.v.glsl", "basic.f.glsl")
+	texturedShader = resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
+	shadedShader = resourceManager:addShader("shaded.v.glsl", "shaded.f.glsl")
 	
 	loadPyongyang()
 	
@@ -53,6 +57,9 @@ function loadPyongyang()
 	
 	resourceManager:addSound(prefix .. "Pyongyang_Music.ogg", SoundType.Music)
 	resourceManager:findSound("Pyongyang_Music"):play()
+	
+	resourceManager:addNamedSound("BusDriving", "Other/BMW_DRIVEBY.ogg", SoundType.Chunk)
+	resourceManager:addNamedSound("BusCrash", "Other/car_skid_and_crash.ogg", SoundType.Chunk)
 	
 	resourceManager:addTexture(prefix .. "Pyongyang_Ground1.dds", TextureType.DDS)
 	resourceManager:addTexture(prefix .. "Pyongyang_Ground2.dds", TextureType.DDS)
@@ -108,9 +115,12 @@ function loadPyongyang()
 	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Walls.obj")
 	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Collisions.obj")
 	
-	basicShader = resourceManager:findShader("basic")
-	shadedShader = resourceManager:findShader("shaded")
-	texturedShader = resourceManager:findShader("textured")
+	resourceManager:addTexture(prefix .. "Pyongyang_Koryo.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Koryo.obj")
+	resourceManager:addTexture(prefix .. "Pyongyang_Ryugyong.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_Ryugyong.obj")
+	resourceManager:addTexture(prefix .. "Pyongyang_JucheTower.dds", TextureType.DDS)
+	resourceManager:addObjectGeometryGroup(prefix .. "Pyongyang_JucheTower.obj")
 	
 	for i,v in ipairs(pyongyangGround:getObjectGeometries()) do
 		local object = ShadedObject(v, shadedShader, resourceManager:findTexture("Pyongyang_Ground" .. i), false, PhysicsBodyType.Ignored)
@@ -142,6 +152,14 @@ function loadPyongyang()
 	
 	addObjectGeometries("Pyongyang_Walls", true, "Pyongyang_Walls", PhysicsBodyType.Static)
 	addObjectGeometries("Pyongyang_Collisions", false, false, PhysicsBodyType.Static)
+	
+	addObjectGeometries("Pyongyang_Koryo", true, "Pyongyang_Koryo", PhysicsBodyType.Ignored)
+	addObjectGeometries("Pyongyang_Ryugyong", true, "Pyongyang_Ryugyong", PhysicsBodyType.Ignored)
+	addObjectGeometries("Pyongyang_JucheTower", true, "Pyongyang_JucheTower", PhysicsBodyType.Ignored)
+	
+	-- Black box, for transition
+	resourceManager:addObjectGeometryGroup("Other/BlackBox.obj")
+	resourceManager:addTexture("Other/BlackBox.dds", TextureType.DDS)
 end
 
 function loadForest()
@@ -179,6 +197,53 @@ function loadForest()
 	resourceManager:addObjectGeometryGroup(plantsPrefix .. "Forest_Trunks.obj")
 	resourceManager:addTexture(plantsPrefix .. "Forest_Trunk.dds", TextureType.DDS)
 	addObjectGeometries("Forest_Trunks", true, "Forest_Trunk", PhysicsBodyType.Static, true)
+	
+	-- Other stuff
+	resourceManager:addObjectGeometryGroup(prefix .. "Forest_Bus.obj")
+	resourceManager:addTexture(prefix .. "Forest_Bus.dds", TextureType.DDS)
+	addObjectGeometries("Forest_Bus", true, "Forest_Bus", PhysicsBodyType.Static)
+	
+	resourceManager:addObjectGeometryGroup(prefix .. "Forest_Collisions.obj")
+	addObjectGeometries("Forest_Collisions", true, false, PhysicsBodyType.Static)
+	
+	generateForestTiles(prefix)
+end
+
+function generateForestTiles(forestPrefix)
+	local prefix = forestPrefix.. "Run/"
+	local numberOfTiles = 1
+	local numberOfTileStyles = 4
+	
+	resourceManager:addTexture(prefix .. "Forest_DefaultTile.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Forest_DefaultWall.dds", TextureType.DDS)
+	resourceManager:addTexture(prefix .. "Forest_Rock1.dds", TextureType.DDS)
+	
+	for i=1,numberOfTileStyles,1 do
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Leaves1.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Leaves2.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Leaves3.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Leaves4.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Rocks.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Tile.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Trunks.obj")
+		resourceManager:addObjectGeometryGroup(prefix .. "Tile" .. i .. "/Tile" .. i .. "_Walls.obj")
+	end
+	
+	math.randomseed(os.clock())
+	math.random();math.random();math.random(); -- Warm up the numbers, better randomness!
+	
+	for i=1,numberOfTiles,1 do
+		local randomTile = math.random(1, numberOfTileStyles) -- Inclusive!
+		
+		addObjectGeometries("Tile" .. randomTile .. "_Leaves1", true, "Forest_Leaves1", PhysicsBodyType.Ignored)
+		addObjectGeometries("Tile" .. randomTile .. "_Leaves2", true, "Forest_Leaves2", PhysicsBodyType.Ignored)
+		addObjectGeometries("Tile" .. randomTile .. "_Leaves3", true, "Forest_Leaves3", PhysicsBodyType.Ignored)
+		addObjectGeometries("Tile" .. randomTile .. "_Leaves4", true, "Forest_Leaves4", PhysicsBodyType.Ignored)
+		addObjectGeometries("Tile" .. randomTile .. "_Rocks", true, "Forest_Rock1", PhysicsBodyType.Static)
+		addObjectGeometries("Tile" .. randomTile .. "_Tile", true, "Forest_DefaultTile", PhysicsBodyType.Ignored)
+		addObjectGeometries("Tile" .. randomTile .. "_Trunks", true, "Forest_Trunk", PhysicsBodyType.Static)
+		addObjectGeometries("Tile" .. randomTile .. "_Walls", true, "Forest_DefaultWall", PhysicsBodyType.Static)
+	end
 end
 
 -- Frees ram and vram
@@ -244,7 +309,7 @@ function gameStep()
 		local physicsBody = v:getPhysicsBody()
 		
 		if(physicsBody:getType() ~= PhysicsBodyType.Ignored) then
-			physicsBody:renderDebugShape(shader, camera)
+			--physicsBody:renderDebugShape(shader, camera)
 		end
 	end
 end
@@ -386,6 +451,30 @@ function doControls()
 	else
 		actionButtonPressedLastFrame = false
 	end
+	
+	if(transitioning~=false) then
+		cameraPhysicsBody:setVelocity(Vec3(0, 0, 0))
+		
+		if(os.clock()>(timeAtTimerStart + timerLength)) then
+			if(transitioning==1) then
+				transitioning = 2
+				
+				-- Reset timer
+				timeAtTimerStart = os.clock() -- In seconds
+				timerLength = 4
+				
+				resourceManager:findSound("BusDriving"):halt()
+				resourceManager:findSound("BusCrash"):play()
+			elseif(transitioning==2) then
+				transitioning = false
+				-- Load forest
+				resetWorld()
+				loadForest()
+				cameraPhysicsBody:setPosition(Vec3(11.1689, -0.634 + playerHeight, 42.1478))
+				camera:setDirection(Vec4(-1, 0, 0, 0))
+			end
+		end
+	end
 end
 
 -- 3D
@@ -427,14 +516,24 @@ function doAction()
 	end
 	
 	-- Bus door
-	if(distanceSquaredBetweenPoints(pos, Vec3(-17.109, playerHeight, -45.71)) <= maxDistanceSquared) then
-		-- Load forest
-		resetWorld()
-		loadForest()
+	if(transitioning==false) then -- To be nice
+		if(distanceSquaredBetweenPoints(pos, Vec3(-17.109, playerHeight, -45.71)) <= maxDistanceSquared) then
+			local randomPos = Vec3(100, 100, 100)
+			cameraPhysicsBody:setPosition(randomPos)
+			local box = addObjectGeometries("BlackBox", false, "BlackBox", PhysicsBodyType.Ignored)[1]
+			box:getPhysicsBody():setPosition(randomPos)
+		
+			transitioning = 1
+			timeAtTimerStart = os.clock() -- In seconds
+			timerLength = 2
+			
+			resourceManager:findSound("Pyongyang_Music"):halt()
+			resourceManager:findSound("BusDriving"):play()
+		end
 	end
 	
-	--[[Utils.logprint("")
+	Utils.logprint("")
 	Utils.logprint("Our pos x: " .. pos.x)
 	Utils.logprint("Our pos y: " .. pos.y)
-	Utils.logprint("Our pos z: " .. pos.z)]]--
+	Utils.logprint("Our pos z: " .. pos.z)
 end
