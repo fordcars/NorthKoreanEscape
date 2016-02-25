@@ -73,7 +73,7 @@ function gameInit()
 	texturedShader = resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
 	shadedShader = resourceManager:addShader("shaded.v.glsl", "shaded.f.glsl")
 	
-	loadCamp()
+	loadPyongyang()
 	
 	inputManager:registerKeys({KeyCode.UP, KeyCode.DOWN, KeyCode.LEFT, KeyCode.RIGHT,
 		KeyCode.w, KeyCode.a, KeyCode.s, KeyCode.d, KeyCode.SPACE, KeyCode.LSHIFT, KeyCode.LCTRL, KeyCode.e})
@@ -508,6 +508,10 @@ function doControls()
 	-- Movement
 	if(inputManager:isKeyPressed(KeyCode.LSHIFT)) then
 		speed = speed * 3
+	end
+	
+	if(inputManager:isKeyPressed(KeyCode.LCTRL)) then
+		speed = speed * 0.3
 	end
 	
 	if(forestRunStarted == false) then
