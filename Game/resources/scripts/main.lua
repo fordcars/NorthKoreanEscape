@@ -480,16 +480,16 @@ function gameStep()
 	
 	doControls();
 	
-	camera:getPhysicsBody():renderDebugShapeWithCoord(resourceManager:findShader("basic"), camera, 0.0)
+	--camera:getPhysicsBody():renderDebugShapeWithCoord(resourceManager:findShader("basic"), camera, 0.0)
 	skybox:getPhysicsBody():setPosition(camera:getPhysicsBody():getPosition())
 
-	for i,v in ipairs(objects) do
+	--[[for i,v in ipairs(objects) do
 		local physicsBody = v:getPhysicsBody()
 
 		if(physicsBody:getType() ~= PhysicsBodyType.Ignored) then
-			--physicsBody:renderDebugShapeWithCoord(basicShader, camera, 0)
+			physicsBody:renderDebugShapeWithCoord(basicShader, camera, 0)
 		end
-	end
+	end]]--
 end
 
 -- http://www.scs.ryerson.ca/~danziger/mth141/Handouts/Slides/projections.pdf
