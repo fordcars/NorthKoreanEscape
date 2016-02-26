@@ -1,0 +1,4 @@
+- WASD to move, arrow keys for camera direction
+- e to open doors/interact
+
+At the start, head over to the bus and enter it.
