@@ -57,7 +57,7 @@ function gameInit()
 	Utils.logprint("Hello, init from lua!")
 	
 	game:setName("North Korean Escape")
-	game:setSize(1024, 768)
+	game:setSize(IVec2(1024, 768))
 	game:setMaxFramesPerSecond(60)
 	game:reCenterMainWindow()
 	
