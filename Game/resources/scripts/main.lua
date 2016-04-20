@@ -14,7 +14,7 @@ local gameCamera = entityManager:getGameCamera()
 local playerHeight = 1.65 -- In meters
 
 local musicButtonPressedLastFrame = false
-local actionButtonPressedLastFrame = false -- e
+local actionButtonPressedLastFrame = false -- Set to 'e'
 
 local basicShader = nil
 local texturedShader = nil
