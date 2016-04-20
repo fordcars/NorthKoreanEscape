@@ -658,6 +658,10 @@ function doControls()
 				timeAtTimerStart = os.clock() -- In seconds
 				timerLength = 4
 				
+				if(resourceManager:findSound("BusDriving"):isPlaying()) then -- This this might be different on different systems
+					resourceManager:findSound("BusDriving"):halt()
+				end
+				
 				resourceManager:findSound("BusCrash"):play()
 			elseif(transitioning==2) then
 				transitioning = false
