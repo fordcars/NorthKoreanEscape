@@ -1,4 +1,3 @@
--Pyongyang walls
--Pyongyang pretty ground textures
--Forest + temple run style game
--Concentration camp
+- Indicate go to bus
+- Fix instant death on slow computers
+- Make temple run funner
