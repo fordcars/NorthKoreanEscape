@@ -688,7 +688,8 @@ function doControls()
 		if(forestRunStarted == true) then
 			forestSpeed = forestSpeed + forestAcceleration
 			
-			-- We need this since we can't velocity until we step the world
+			-- We need this since when we change the velocity, the position will only have changed after a step,
+			-- and this makes checking if we got stuck more difficult.
 			if(forest5050Step == true) then
 				local velocity = Vec3.scalarMul(Vec3.normalize(Vec3(cameraDirection.x, 0, cameraDirection.z)), forestSpeed)
 				cameraPhysicsBody:setVelocity(velocity)
