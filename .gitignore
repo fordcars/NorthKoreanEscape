@@ -1,1 +1,2 @@
-Game/Log.txt # Because committing a log is annoying :)
+# Because committing a log is annoying :)
+/Game/Log.txt # The first slash (/) is better otherwise it will search all sub directories too
