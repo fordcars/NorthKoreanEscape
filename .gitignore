@@ -1,3 +1,7 @@
 # Because committing a log is annoying :)
 # The first slash (/) is better otherwise it will search all sub directories too
 /Game/Log.txt
+
+# Linux hidden temporary files (files ending with a tilde (~))
+*~
+
