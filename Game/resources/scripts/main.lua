@@ -67,7 +67,7 @@ function gameInit()
 	camera:setFieldOfView(90)
 	
 	cameraPhysicsBody:calculateShapesFromRadius(0.5)
-	cameraPhysicsBody:setWorldFriction(3)
+	cameraPhysicsBody:setWorldFriction(9)
 	
 	basicShader = resourceManager:addShader("basic.v.glsl", "basic.f.glsl")
 	texturedShader = resourceManager:addShader("textured.v.glsl", "textured.f.glsl")
@@ -500,7 +500,7 @@ function projectVec2OnVec2(vector, projectionVector)
 end
 
 function doControls()
-	local speed = 5.5
+	local speed = 3.5
 	local angleIncrementation = 0.02
 	
 	local camera = entityManager:getGameCamera()
@@ -797,39 +797,37 @@ function doAction()
 	
 	-- Restart
 	if(level == 3) then
-		if(distanceSquaredBetweenPoints(pos, Vec3(24.13, -1.01 + playerHeight, 20.57)) <= maxDistanceSquared) then
-			timeAtTimerStart = 0
-			timerLength = 0 -- In seconds
-			transitioning = false
+		timeAtTimerStart = 0
+		timerLength = 0 -- In seconds
+		transitioning = false
 
-			level = 1 -- Current level (1 for pyongyang)
+		level = 1 -- Current level (1 for pyongyang)
 
-			forestTileLength = 24.3
-			forestFirstTilePosition = Vec3(22.89, -1.18, 98.94)
-			forestNextTilePosition = 0 -- Z coord when we last deleted/created tiles, changed when generating initial forest tiles
+		forestTileLength = 24.3
+		forestFirstTilePosition = Vec3(22.89, -1.18, 98.94)
+		forestNextTilePosition = 0 -- Z coord when we last deleted/created tiles, changed when generating initial forest tiles
 
-			forestNumberOfTileStyles = 4
-			forestNumberOfTilesToCreate = 5 -- Create tiles when we delete/create them
-			forestMinTilesForSeamless = 3 -- Minimum amount of tiles that hide us creating new tiles!
+		forestNumberOfTileStyles = 4
+		forestNumberOfTilesToCreate = 5 -- Create tiles when we delete/create them
+		forestMinTilesForSeamless = 3 -- Minimum amount of tiles that hide us creating new tiles!
 
-			forestTileObjects = {} -- A 2D list, first-D for tiles, second-D for objects in that tile
+		forestTileObjects = {} -- A 2D list, first-D for tiles, second-D for objects in that tile
 
-			forestFirstTileDeletion = true
+		forestFirstTileDeletion = true
 
-			forestRunStarted = false
-			forest5050Step = false -- 50/50 frame flag, beautiful name
-			forestSpeed = 5 -- Initial speed
-			forestAcceleration = 0.01
+		forestRunStarted = false
+		forest5050Step = false -- 50/50 frame flag, beautiful name
+		forestSpeed = 5 -- Initial speed
+		forestAcceleration = 0.01
 
-			forestStepsSlowToLose = 30
-			forestStepsPlayerSlow = 0
-			forestLastPosition = Vec3(0, 0, 0)
+		forestStepsSlowToLose = 30
+		forestStepsPlayerSlow = 0
+		forestLastPosition = Vec3(0, 0, 0)
 
-			forestIntroCollision = nil -- Remove after intro ends!
-			
-			resetWorld()
-			loadPyongyang()
-		end
+		forestIntroCollision = nil -- Remove after intro ends!
+		
+		resetWorld()
+		loadPyongyang()
 	end
 	
 	--[[Utils.logprint("")
