@@ -840,7 +840,7 @@ end
 function findInArray(array, element)
 	for i,v in ipairs(array) do
 		if(v == element) then
-			return v
+			return i
 		end
 	end
 	
