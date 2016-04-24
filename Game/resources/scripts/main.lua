@@ -837,7 +837,7 @@ function doAction()
 end
 
 -- Returns the index of the first instance of element, or false if nothing was found
-function findInArray(element, array)
+function findInArray(array, element)
 	for i,v in ipairs(array) do
 		if(v == element) then
 			return v
