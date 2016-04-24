@@ -836,13 +836,15 @@ function doAction()
 	Utils.logprint("Our pos z: " .. pos.z)]]--
 end
 
--- Returns the index of the first instance of element
+-- Returns the index of the first instance of element, or false if nothing was found
 function findInArray(element, array)
 	for i,v in ipairs(array) do
 		if(v == element) then
 			return v
 		end
 	end
+	
+	return false
 end
 
 function lose()
