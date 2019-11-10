@@ -3,6 +3,8 @@
 
 -- We create forest tiles dynamically to have a lower work load (there are a lot of objects per tile, which is difficult for Box2D and the GPU for textures)
 
+-- TODO: Use os.time() instead of os.clock(), since os.clock() is inconsistent between platforms! (Windows vs Linux and MacOS)
+
 local game = getGame()
 
 local resourceManager = game:getResourceManager()
